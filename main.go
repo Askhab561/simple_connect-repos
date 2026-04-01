@@ -1,15 +1,56 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"study/feature1"
-	"study/feature2"
-	simpleconnection "study/feature_postgres/simple_connection"
+	"study/feature_postgres/simple_connection"
+	"study/feature_postgres/simple_connection/simple_sql"
+	"time"
 )
 
 func main() {
-	feature1.Feature1()
-	feature2.Feature2()
-	fmt.Println(" Hello i'm package main")
-	simpleconnection.CheckConnection()
+	ctx := context.Background()
+
+	conn, err := simple_connection.CreateConnection(ctx)
+	if err != nil {
+		panic(err)
+	}
+	if err := simple_sql.CreateTable(ctx, conn); err != nil {
+		panic(err)
+	}
+	/*if err := simple_sql.InsertRow(
+		ctx,
+		conn,
+		"дом11",
+		"сделать домашку",
+		false,
+		time.Now(),
+	); err != nil {
+		panic(err)
+	}
+
+	/*if err := simple_sql.UpdateRow(ctx, conn); err != nil {
+		panic(err)
+	}
+	if err := simple_sql.DeleteRow(ctx, conn); err != nil {
+	panic(err)*/
+	tasks, err := simple_sql.SelectRow(ctx, conn)
+	if err != nil {
+		panic(err)
+	}
+	for _, task := range tasks {
+		if task.ID == 3 {
+			task.Title = "покормить кошку"
+			task.Description = "отсыпать кошке 30грамм наркоты"
+			task.Completed = true
+			now := time.Now()
+			task.CompletedAt = &now
+			if err := simple_sql.UpdateTask(ctx, conn, task); err != nil {
+				panic(err)
+			}
+			break
+		}
+	}
+
+	fmt.Println("suceed!")
 }
